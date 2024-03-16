@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
 import passport from "passport";
 import { Strategy } from "passport-local";
 import session from "express-session";
+// this allow us to create google login strategy
+import GoogleStrategy from "passport-google-oauth2"
 import env from "dotenv";
 
 const app = express();
@@ -138,6 +140,14 @@ passport.use(
     }
   })
 );
+// setup our passport authentication middleware Google based strategy
+passport.use("google", new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/auth/google/secrets",
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+ }, async ())
+)
 
 passport.serializeUser((user, cb) => {
   cb(null, user);
