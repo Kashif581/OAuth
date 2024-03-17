@@ -67,6 +67,15 @@ app.get("/secrets", (req, res) => {
   }
 });
 
+app.get("/auth/google", passport.authenticate("google", {
+  scope: ["profile", "email"]
+}))
+
+app.get("/auth/google/secrets", passport.authenticate("google", {
+  successRedirect: "/secrets",
+  failureRedirect: "/login",
+}))
+
 app.post(
   "/login",
   passport.authenticate("local", {
@@ -146,7 +155,9 @@ passport.use("google", new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: "http://localhost:3000/auth/google/secrets",
   userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
- }, async ())
+ }, async (accessToken, refreshToken, profile, cb) => { // accessToken and refreshToken  is something that keep user signed in.
+    console.log(profile)
+ }) 
 )
 
 passport.serializeUser((user, cb) => {
