@@ -75,7 +75,13 @@ app.get("/auth/google/secrets", passport.authenticate("google", {
   successRedirect: "/secrets",
   failureRedirect: "/login",
 }))
-
+// logout button
+app.get("/logout", (req, res) =>{
+  req.logout((err) =>{
+    if (err) console.log(err)
+    res.redirect("/")
+  })
+})
 app.post(
   "/login",
   passport.authenticate("local", {
@@ -157,6 +163,22 @@ passport.use("google", new GoogleStrategy({
   userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
  }, async (accessToken, refreshToken, profile, cb) => { // accessToken and refreshToken  is something that keep user signed in.
     console.log(profile)
+    try {
+      const result = await db.query("SELECT * FROM users WHERE email = $1", [profile.email])
+      if (result.rows.length === 0) {
+        // for password is depend on you because we don't get the password from google so some store there ID to identitfy them some people stored word such as google so that when you look through the database, you know why it is they don't have a suitable password is because they are a Google sign in user.
+        const newUser = await db.query("INSERT INTO users (email, password) VALUES ($1, $2)", [profile.email, "google"])
+        // null is for no error
+        cb(null, newUser.rows[0])
+      } else {
+        // Already existing user
+        cb(null, result.rows[0])
+      }
+
+    } catch (err) {
+      cb(err);
+
+    }
  }) 
 )
 
